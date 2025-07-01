@@ -3,6 +3,7 @@ node_modules/
 
 # Env variables
 .env
+.gitignore
 
 # Logs
 npm-debug.log*
