@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-export const authenticateUser = (req, res, next) => {
+export const authenticateUser = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   //checking if header exist and start with bearer
@@ -12,7 +13,7 @@ export const authenticateUser = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id };
+    req.user = await User.findById(decoded.id).select("-password");
     next(); //proced to route controller
   } catch (error) {
     return res.status(401).json({ message: "Unauthorized : Token is missing" });
