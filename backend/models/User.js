@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema(
     country: {
       type: String,
       required: true,
+    },
+    profileImage: {
+      type: String,
+      required: true, // ✅ Required now
     },
   },
   {

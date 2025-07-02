@@ -3,7 +3,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res) => {
-  const { username, email, password, country } = req.body;
+  const { username, email, password, country, profileImage } = req.body;
+  if (!username || !email || !password || !country || !profileImage) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
   try {
     const existingUser = await User.findOne({ email });
@@ -19,6 +22,7 @@ export const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       country,
+      profileImage,
     });
 
     //creating token
@@ -33,6 +37,7 @@ export const registerUser = async (req, res) => {
         username: newUser.username,
         email: newUser.email,
         country: newUser.country,
+        profileImage: newUser.profileImage,
       },
       token,
     });
