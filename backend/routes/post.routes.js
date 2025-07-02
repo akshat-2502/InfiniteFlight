@@ -19,5 +19,6 @@ router.put("/:id/like", authenticateUser, toggleLikePost);
 router.delete("/:id", authenticateUser, deletePost);
 router.delete("/:postId/comment/:commentId", authenticateUser, deleteComment);
 router.get("/:id", getSinglePost);
+router.put("/:id", authenticateUser, editPost);
 
 export default router;
