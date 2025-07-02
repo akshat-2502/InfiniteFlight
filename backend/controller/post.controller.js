@@ -175,3 +175,30 @@ export const getSinglePost = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+//EDIT POST
+
+export const editPost = async (req, res) => {
+  try {
+    const { id } = req.params; //post id
+    const { caption, image } = req.body;
+    const userId = req.user._id;
+
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    if (post.postedBy.toString() !== userId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized: Cannot edit this post" });
+    }
+    if (caption) post.caption = caption;
+    if (image) post.image = image;
+
+    await post.save();
+    res.status(200).json({ message: "Post updated successfully", post });
+  } catch (error) {
+    console.error("Error editing post:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
