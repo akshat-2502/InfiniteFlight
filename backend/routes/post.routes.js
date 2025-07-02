@@ -5,6 +5,7 @@ import {
   createPost,
   deleteComment,
   deletePost,
+  editPost,
   getAllPosts,
   getSinglePost,
   toggleLikePost,
