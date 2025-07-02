@@ -14,10 +14,17 @@ import {
   commentRateLimiter,
   postRateLimiter,
 } from "../middleware/rateLimiter.js";
+import parser from "../middleware/cloudinaryUpload.js";
 
 const router = express.Router();
 
-router.post("/create", authenticateUser, postRateLimiter, createPost);
+router.post(
+  "/create",
+  authenticateUser,
+  postRateLimiter,
+  parser.single("image"),
+  createPost
+);
 
 router.post(
   "/:postId/comment",
@@ -31,6 +38,6 @@ router.put("/:id/like", authenticateUser, toggleLikePost);
 router.delete("/:id", authenticateUser, deletePost);
 router.delete("/:postId/comment/:commentId", authenticateUser, deleteComment);
 router.get("/:id", getSinglePost);
-router.put("/:id", authenticateUser, editPost);
+router.put("/:id", authenticateUser, parser.single("image"), editPost);
 
 export default router;

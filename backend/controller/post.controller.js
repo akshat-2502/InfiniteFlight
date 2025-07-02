@@ -1,3 +1,4 @@
+import cloudinary from "../config/cloudinary.js";
 import Post from "../models/Post.js";
 import { createPostSchema } from "../validations/postValidation.js";
 
@@ -8,10 +9,9 @@ export const createPost = async (req, res) => {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { caption, image } = req.body;
-    if (!caption) {
-      return res.status(400).json({ message: "Caption is required" });
-    }
+    const { caption } = req.body;
+    const image = req.file?.path;
+
     const post = new Post({
       caption,
       image,
@@ -135,6 +135,18 @@ export const deletePost = async (req, res) => {
         .json({ message: "Unauthorized: Cannot delete this post" });
     }
 
+    if (post.image) {
+      try {
+        const urlParts = post.image.split("/upload/");
+        const publicIdWithExt = urlParts[1].split("/").slice(1).join("/");
+        const publicId = publicIdWithExt.split(".")[0];
+
+        const result = await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.error("Failed to delete image from Cloudinary:", err.message);
+      }
+    }
+
     await post.deleteOne();
     res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
@@ -192,7 +204,7 @@ export const getSinglePost = async (req, res) => {
 export const editPost = async (req, res) => {
   try {
     const { id } = req.params; //post id
-    const { caption, image } = req.body;
+    const { caption } = req.body;
     const userId = req.user._id;
 
     const post = await Post.findById(id);
@@ -203,8 +215,29 @@ export const editPost = async (req, res) => {
         .status(403)
         .json({ message: "Unauthorized: Cannot edit this post" });
     }
+
+    if (req.file) {
+      const newImageUrl = req.file.path;
+
+      // Optional: delete old image from Cloudinary
+      if (post.image) {
+        const fullUrl = post.image;
+        const urlParts = fullUrl.split("/upload/");
+
+        // urlParts[1] = 'v1751497940/infinite-flight/posts/abc123.png'
+        // So we remove the version manually
+        const publicIdWithExt = urlParts[1].split("/").slice(1).join("/"); // removes 'v...'
+        const publicId = publicIdWithExt.split(".")[0];
+
+        console.log("🛠️ Final Public ID to delete:", publicId);
+
+        await cloudinary.uploader.destroy(publicId);
+      }
+
+      post.image = newImageUrl;
+    }
+
     if (caption) post.caption = caption;
-    if (image) post.image = image;
 
     await post.save();
     res.status(200).json({ message: "Post updated successfully", post });
