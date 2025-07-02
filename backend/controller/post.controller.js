@@ -55,12 +55,25 @@ export const getAllPosts = async (req, res) => {
   try {
     const skip = parseInt(req.query.skip) || 0;
     const limit = parseInt(req.query.limit) || 20;
+
+    const totalPosts = await Post.countDocuments();
+
     const posts = await Post.find()
       .populate("postedBy", "username country") //show user and country
       .populate("comments.commentedBy", "username country") //coment
-      .sort({ createdAt: -1 }); //latest first
+      .sort({ createdAt: -1 }) //latest first
+      .skip(skip)
+      .limit(limit);
 
-    res.status(200).json(posts);
+    const hasMore = skip + limit < totalPosts;
+
+    res.status(200).json({
+      posts,
+      totalPosts,
+      skip,
+      limit,
+      hasMore,
+    });
   } catch (err) {
     console.error("Error fetching posts:", err);
     res.status(500).json({ message: "Server error" });
