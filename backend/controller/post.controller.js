@@ -53,6 +53,8 @@ export const addComment = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
   try {
+    const skip = parseInt(req.query.skip) || 0;
+    const limit = parseInt(req.query.limit) || 20;
     const posts = await Post.find()
       .populate("postedBy", "username country") //show user and country
       .populate("comments.commentedBy", "username country") //coment
