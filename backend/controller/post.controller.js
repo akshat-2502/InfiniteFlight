@@ -1,7 +1,13 @@
 import Post from "../models/Post.js";
+import { createPostSchema } from "../validations/postValidation.js";
 
 export const createPost = async (req, res) => {
   try {
+    const { error } = createPostSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
     const { caption, image } = req.body;
     if (!caption) {
       return res.status(400).json({ message: "Caption is required" });
@@ -25,6 +31,11 @@ export const createPost = async (req, res) => {
 
 export const addComment = async (req, res) => {
   try {
+    const { error } = commentSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
     const { text } = req.body;
     const { postId } = req.params;
 

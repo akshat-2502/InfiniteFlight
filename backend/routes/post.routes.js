@@ -10,11 +10,22 @@ import {
   getSinglePost,
   toggleLikePost,
 } from "../controller/post.controller.js";
+import {
+  commentRateLimiter,
+  postRateLimiter,
+} from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-router.post("/create", authenticateUser, createPost);
-router.post("/:postId/comment", authenticateUser, addComment);
+router.post("/create", authenticateUser, postRateLimiter, createPost);
+
+router.post(
+  "/:postId/comment",
+  authenticateUser,
+  commentRateLimiter,
+  addComment
+);
+
 router.get("/", getAllPosts);
 router.put("/:id/like", authenticateUser, toggleLikePost);
 router.delete("/:id", authenticateUser, deletePost);
