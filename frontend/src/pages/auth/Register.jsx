@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios"; // use plain axios here for multipart
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/userSlice";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import airplaneLoading from "../../assets/animationloading.lottie";
 
 const Register = ({ setLogin }) => {
   const dispatch = useDispatch();
@@ -71,7 +73,7 @@ const Register = ({ setLogin }) => {
   return (
     <>
       {pageLoading ? (
-        <p className="flex items-center justify-center">Please Wait</p>
+        <DotLottieReact src={airplaneLoading} loop autoplay />
       ) : (
         <div className="w-[90%] md:w-1/2 flex relative flex-col justify-center p-10">
           <button className="absolute top-2 left-2 text-white cursor-pointer font-bold w-30 rounded-xl py-2 px-3 bg-blue-600 flex justify-center items-center">

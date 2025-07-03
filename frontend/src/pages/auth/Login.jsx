@@ -4,6 +4,8 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { login } from "../../redux/userSlice";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import airplaneLoading from "../../assets/animationloading.lottie";
 
 const Login = ({ setLogin }) => {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ const Login = ({ setLogin }) => {
   return (
     <>
       {pageLoading ? (
-        <p>Please wait...</p>
+        <DotLottieReact src={airplaneLoading} loop autoplay />
       ) : (
         <div className="w-[90%] md:w-1/2 flex relative flex-col justify-center p-10">
           <button
