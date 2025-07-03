@@ -112,7 +112,9 @@ const HomePage = () => {
             <button className="bg-purple-600 px-4 py-2 rounded text-sm hover:bg-purple-700">
               {activeTab === "flights" ? "Create Flight" : "Create Post"}
             </button>
-            <ProfileDropdown />
+            <div className="flex items-center">
+              <ProfileDropdown />
+            </div>
           </div>
         </div>
 
