@@ -5,7 +5,7 @@ import connectDatabase from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import postRoutes from "./routes/post.routes.js";
 import userRoutes from "./routes/user.routes.js";
-
+import flightRoutes from "./routes/flight.routes.js";
 dotenv.config();
 connectDatabase();
 
@@ -21,6 +21,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/flights", flightRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running on port :- ", process.env.PORT);
