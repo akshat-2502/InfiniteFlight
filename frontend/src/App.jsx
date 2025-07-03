@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Authorization from "./pages/auth/Authorization";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
+import { useDispatch } from "react-redux";
+import { setUserFromLocalStorage } from "./redux/userSlice";
 
 const App = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(setUserFromLocalStorage());
+  }, [dispatch]);
   return (
     <Router>
       <Routes>

@@ -2,8 +2,11 @@ import { ArrowLeft } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // use plain axios here for multipart
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/userSlice";
 
 const Register = ({ setLogin }) => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
@@ -55,6 +58,7 @@ const Register = ({ setLogin }) => {
       );
 
       localStorage.setItem("token", res.data.token);
+      dispatch(login(res.data));
       setPageLoading(false);
       navigate("/");
     } catch (err) {
