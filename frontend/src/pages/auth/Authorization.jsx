@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Register from "../../components/Register";
-import Login from "../../components/Login";
+import Register from "./Register";
+import Login from "./Login";
 
 const images = [
   "https://res.cloudinary.com/dm6qyqnuz/image/upload/v1751558840/1_chpvon.jpg",

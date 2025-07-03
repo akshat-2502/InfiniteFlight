@@ -1,71 +1,155 @@
 import { ArrowLeft } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios"; // use plain axios here for multipart
 
 const Register = ({ setLogin }) => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    country: "",
+  });
+  const [profileImage, setProfileImage] = useState(null);
+  const [error, setError] = useState("");
+  const [pageLoading, setPageLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    setProfileImage(e.target.files[0]);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setPageLoading(true);
+    setError("");
+
+    if (!profileImage) {
+      setError("Please upload a profile image.");
+      return;
+    }
+
+    try {
+      const data = new FormData();
+      data.append("username", formData.username);
+      data.append("email", formData.email);
+      data.append("password", formData.password);
+      data.append("country", formData.country);
+      data.append("profileImage", profileImage); // actual file
+
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/register",
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      localStorage.setItem("token", res.data.token);
+      setPageLoading(false);
+      navigate("/");
+    } catch (err) {
+      setPageLoading(false);
+      console.error(err);
+      setError(err.response?.data?.message || "Registration failed.");
+    }
+  };
+
   return (
-    <div className="w-[90%] md:w-1/2 flex relative flex-col justify-center p-10">
-      <button className="absolute top-2 left-2 text-white cursor-pointer font-bold w-30 rounded-xl py-2 px-3 bg-blue-600 flex justify-center items-center">
-        <ArrowLeft /> HOME
-      </button>
-      <h2 className="text-3xl font-extrabold mb-2 mt-6 font-sans flex justify-center text-zinc-700">
-        CREATE AN ACCOUNT
-      </h2>
-      <p className="text-gray-600 mb-6 font-semibold text-sm flex justify-center items-center">
-        Join Together || Fly Together || Fly In A Group
-      </p>
-      <form className="space-y-4">
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          required
-          className="w-full p-3 border border-gray-300 rounded"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          required
-          className="w-full p-3 border border-gray-300 rounded"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          required
-          className="w-full p-3 border border-gray-300 rounded"
-        />
-        <input
-          type="text"
-          name="country"
-          placeholder="Country"
-          required
-          className="w-full p-3 border border-gray-300 rounded"
-        />
-        <input
-          type="text"
-          name="profileImage"
-          placeholder="Profile Image URL"
-          required
-          className="w-full p-3 border border-gray-300 rounded"
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition"
-        >
-          Register
-        </button>
-        <p>
-          Already have an account ?{" "}
-          <span
-            onClick={() => setLogin(true)}
-            className="text-blue-500 cursor-pointer font-semibold"
+    <>
+      {pageLoading ? (
+        <p className="flex items-center justify-center">Please Wait</p>
+      ) : (
+        <div className="w-[90%] md:w-1/2 flex relative flex-col justify-center p-10">
+          <button className="absolute top-2 left-2 text-white cursor-pointer font-bold w-30 rounded-xl py-2 px-3 bg-blue-600 flex justify-center items-center">
+            <ArrowLeft /> HOME
+          </button>
+          <h2 className="text-3xl font-extrabold mb-2 mt-6 font-sans flex justify-center text-zinc-700">
+            CREATE AN ACCOUNT
+          </h2>
+          <p className="text-gray-600 mb-6 font-semibold text-sm flex justify-center items-center">
+            Join Together || Fly Together || Fly In A Group
+          </p>
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+            encType="multipart/form-data"
           >
-            Login
-          </span>
-        </p>
-      </form>
-    </div>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+            <input
+              type="text"
+              name="country"
+              placeholder="Country"
+              onChange={handleChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              required
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+            {profileImage && (
+              <img
+                src={URL.createObjectURL(profileImage)}
+                alt="preview"
+                className="w-20 h-20 object-cover rounded-full mt-2"
+              />
+            )}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition"
+            >
+              Register
+            </button>
+            <p>
+              Already have an account ?{" "}
+              <span
+                onClick={() => setLogin(true)}
+                className="text-blue-500 cursor-pointer font-semibold"
+              >
+                Login
+              </span>
+            </p>
+          </form>
+        </div>
+      )}
+    </>
   );
 };
 
