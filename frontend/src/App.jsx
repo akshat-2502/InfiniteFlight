@@ -1,5 +1,5 @@
 import React from "react";
-import Authorization from "./pages/Authorization";
+import Authorization from "./pages/auth/Authorization";
 
 const App = () => {
   return (
