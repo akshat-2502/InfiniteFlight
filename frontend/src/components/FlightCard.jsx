@@ -9,6 +9,7 @@ import { FaUserFriends } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import { toast } from "react-toastify";
 
 const FlightCard = ({ flight }) => {
   const user = useSelector((state) => state.user.user);
