@@ -60,7 +60,7 @@ const Register = ({ setLogin }) => {
       );
 
       localStorage.setItem("token", res.data.token);
-      dispatch(login(res.data));
+      dispatch(login({ user: res.data.user, token: res.data.token }));
       setPageLoading(false);
       navigate("/");
     } catch (err) {

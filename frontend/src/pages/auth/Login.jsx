@@ -29,7 +29,7 @@ const Login = ({ setLogin }) => {
     setPageLoading(true);
     try {
       const res = await axiosInstance.post("/auth/login", formData);
-      dispatch(login(res.data));
+      dispatch(login({ user: res.data.user, token: res.data.token }));
       setPageLoading(false);
       navigate("/");
     } catch (error) {

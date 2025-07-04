@@ -1,22 +1,8 @@
 import React, { useState } from "react";
-import FlightCard from "../components/FlightCard";
 import { Menu } from "lucide-react";
 import ProfileDropdown from "../components/ProfileDropdown";
-
-const dummyFlights = [
-  {
-    origin: "Lucknow",
-    destination: "Delhi",
-    departureTime: "03 Jul, 09:30 PM",
-    airline: "Air India",
-    server: "Expert",
-    createdBy: {
-      username: "Akshat",
-      profileImage: "https://via.placeholder.com/40",
-    },
-    participants: [{}, {}, {}],
-  },
-];
+import FlightsView from "./FlightsView"; // ✅ Import your actual FlightsView
+// If it's in pages, adjust: import FlightsView from "../pages/FlightsView";
 
 const Sidebar = ({ isOpen }) => (
   <div
@@ -45,14 +31,6 @@ const Sidebar = ({ isOpen }) => (
   </div>
 );
 
-const FlightsView = () => (
-  <div className="flex-1 p-6">
-    {dummyFlights.map((flight, index) => (
-      <FlightCard key={index} flight={flight} />
-    ))}
-  </div>
-);
-
 const FeedView = () => (
   <div className="flex-1 p-6 text-white">
     <p>Feed content goes here...</p>
@@ -74,12 +52,12 @@ const HomePage = () => {
 
       <Sidebar isOpen={sidebarOpen} />
 
-      {/* Overlay when sidebar is open on mobile */}
+      {/* Overlay for mobile sidebar */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-        ></div>
+        />
       )}
 
       {/* Main Content */}
@@ -108,17 +86,15 @@ const HomePage = () => {
               Feed
             </button>
           </div>
-          <div className="flex justify-center md:justify-end">
+          <div className="flex justify-center md:justify-end items-center gap-4">
             <button className="bg-purple-600 px-4 py-2 rounded text-sm hover:bg-purple-700">
               {activeTab === "flights" ? "Create Flight" : "Create Post"}
             </button>
-            <div className="flex items-center">
-              <ProfileDropdown />
-            </div>
+            <ProfileDropdown />
           </div>
         </div>
 
-        {/* Content */}
+        {/* View Content */}
         <div className="w-full max-w-5xl">
           {activeTab === "flights" ? <FlightsView /> : <FeedView />}
         </div>
