@@ -7,7 +7,7 @@ export const getAllFlights = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
 
     const flights = await Flight.find()
-      .sort({ departureTime: 1 }) // soonest flights first
+      .sort({ departureTime: -1 }) // soonest flights first
       .skip(skip)
       .limit(limit)
       .populate("createdBy", "username profileImage")
