@@ -7,12 +7,25 @@ import CreateFlightModal from "../components/CreateFlightModal";
 import CreatePostModal from "../components/CreatePostModal";
 import axiosInstance from "../utils/axiosInstance";
 
+// Sidebar with filters
 const Sidebar = ({ isOpen, filters, setFilters }) => {
   const user = useSelector((state) => state.user.user);
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: checked }));
+    setFilters((prev) => {
+      const updated = { ...prev };
+
+      // Only one server can be selected
+      if (["casual", "training", "expert"].includes(name)) {
+        updated.casual = false;
+        updated.training = false;
+        updated.expert = false;
+      }
+
+      updated[name] = checked;
+      return updated;
+    });
   };
 
   return (
@@ -43,66 +56,32 @@ const Sidebar = ({ isOpen, filters, setFilters }) => {
       <div className="mt-8">
         <h3 className="text-sm text-gray-300 mb-2">Filter Flights</h3>
         <div className="space-y-2 text-sm text-gray-300">
-          <label className="block">
-            <input
-              type="checkbox"
-              name="today"
-              checked={filters.today || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Today
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="morning"
-              checked={filters.morning || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            12am – 11:59am
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="evening"
-              checked={filters.evening || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            12pm – 11:59pm
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="casual"
-              checked={filters.casual || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Casual Server
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="training"
-              checked={filters.training || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Training Server
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="expert"
-              checked={filters.expert || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Expert Server
-          </label>
+          {["today", "morning", "evening"].map((key) => (
+            <label className="block" key={key}>
+              <input
+                type="checkbox"
+                name={key}
+                checked={filters[key] || false}
+                onChange={handleCheckboxChange}
+                className="mr-2"
+              />
+              {key === "today" && "Today"}
+              {key === "morning" && "12am – 11:59am"}
+              {key === "evening" && "12pm – 11:59pm"}
+            </label>
+          ))}
+          {["casual", "training", "expert"].map((key) => (
+            <label className="block" key={key}>
+              <input
+                type="checkbox"
+                name={key}
+                checked={filters[key] || false}
+                onChange={handleCheckboxChange}
+                className="mr-2"
+              />
+              {key.charAt(0).toUpperCase() + key.slice(1)} Server
+            </label>
+          ))}
         </div>
       </div>
     </div>
@@ -118,8 +97,9 @@ const HomePage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({});
+  const observerRef = useRef();
+
   const user = useSelector((state) => state.user.user);
-  const observer = useRef();
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
@@ -129,8 +109,10 @@ const HomePage = () => {
     const now = new Date();
 
     if (filters.today) {
-      const start = new Date(now.setHours(0, 0, 0, 0));
-      const end = new Date(now.setHours(23, 59, 59, 999));
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
       params.append("departureAfter", start.toISOString());
       params.append("departureBefore", end.toISOString());
     } else if (filters.morning) {
@@ -149,34 +131,32 @@ const HomePage = () => {
       params.append("departureBefore", end.toISOString());
     }
 
-    if (filters.casual) {
-      params.append("server", "Casual");
-    } else if (filters.training) {
-      params.append("server", "Training");
-    } else if (filters.expert) {
-      params.append("server", "Expert");
-    }
-
-    if (filters.myFlights && user?._id) {
-      params.append("createdBy", user._id);
-    }
+    if (filters.casual) params.append("server", "Casual");
+    if (filters.training) params.append("server", "Training");
+    if (filters.expert) params.append("server", "Expert");
+    if (filters.myFlights && user?._id) params.append("createdBy", user._id);
 
     return params.toString();
   };
 
   const fetchFlights = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const query = buildQueryParams();
-      const { data } = await axiosInstance.get(`/flights/search?${query}`);
+      const endpoint = Object.keys(filters).length
+        ? `/flights/search?${query}`
+        : `/flights?${query}`;
+      const res = await axiosInstance.get(endpoint);
+
       if (page === 0) {
-        setFlights(data);
+        setFlights(res.data);
       } else {
-        setFlights((prev) => [...prev, ...data]);
+        setFlights((prev) => [...prev, ...res.data]);
       }
-      setHasMore(data.length === 10);
+
+      setHasMore(res.data.length === 10);
     } catch (err) {
-      console.error("Fetch Flights Error:", err);
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -184,8 +164,6 @@ const HomePage = () => {
 
   useEffect(() => {
     setPage(0);
-    setFlights([]);
-    setHasMore(true);
   }, [filters]);
 
   useEffect(() => {
@@ -195,22 +173,20 @@ const HomePage = () => {
   const lastFlightRef = useCallback(
     (node) => {
       if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
           setPage((prev) => prev + 1);
         }
       });
-      if (node) observer.current.observe(node);
+      if (node) observerRef.current.observe(node);
     },
     [loading, hasMore]
   );
 
-  const handleCreateClick = () => setShowModal(true);
-  const handleModalClose = () => setShowModal(false);
-
   return (
     <div className="min-h-screen bg-zinc-900 text-white flex overflow-x-hidden">
+      {/* Mobile Sidebar Toggle */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>
           <Menu size={24} />
@@ -226,7 +202,9 @@ const HomePage = () => {
         />
       )}
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col items-center transition-all duration-300">
+        {/* Navbar */}
         <div className="w-full max-w-5xl flex flex-col md:flex-row md:justify-between md:items-center p-6 border-b border-zinc-800 gap-4">
           <div className="flex gap-6 justify-center md:justify-start text-sm font-semibold">
             <button
@@ -252,7 +230,7 @@ const HomePage = () => {
           </div>
           <div className="flex justify-center md:justify-end items-center gap-4">
             <button
-              onClick={handleCreateClick}
+              onClick={() => setShowModal(true)}
               className="bg-purple-600 px-4 py-2 rounded text-sm hover:bg-purple-700"
             >
               {activeTab === "flights" ? "Create Flight" : "Create Post"}
@@ -261,6 +239,7 @@ const HomePage = () => {
           </div>
         </div>
 
+        {/* View Content */}
         <div className="w-full max-w-5xl">
           {activeTab === "flights" ? (
             <FlightsView flights={flights} lastFlightRef={lastFlightRef} />
@@ -269,19 +248,18 @@ const HomePage = () => {
           )}
         </div>
 
+        {/* Modals */}
         {showModal && activeTab === "flights" && (
           <CreateFlightModal
-            onClose={handleModalClose}
+            onClose={() => setShowModal(false)}
             onCreated={() => {
               setPage(0);
-              setFlights([]);
-              setHasMore(true);
+              setShowModal(false);
             }}
           />
         )}
-
         {showModal && activeTab === "feed" && (
-          <CreatePostModal onClose={handleModalClose} />
+          <CreatePostModal onClose={() => setShowModal(false)} />
         )}
       </div>
     </div>
