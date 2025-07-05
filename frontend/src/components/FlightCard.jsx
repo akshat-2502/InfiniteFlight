@@ -4,13 +4,15 @@ import {
   PlaneLanding,
   UserRoundPlus,
   UserRoundMinus,
+  Trash2,
 } from "lucide-react";
 import { FaUserFriends } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
+import { toast } from "react-toastify";
 
-const FlightCard = ({ flight }) => {
+const FlightCard = ({ flight, onDelete }) => {
   const user = useSelector((state) => state.user.user);
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
   const navigate = useNavigate();
@@ -20,7 +22,8 @@ const FlightCard = ({ flight }) => {
     flight.participants.length + 1
   );
 
-  // ✅ Check if current user is already joined
+  const isOwner = user?._id === flight.createdBy?._id;
+
   useEffect(() => {
     if (user && flight.participants) {
       const alreadyJoined = flight.participants.some((p) => p._id === user._id);
@@ -28,7 +31,6 @@ const FlightCard = ({ flight }) => {
     }
   }, [user, flight.participants]);
 
-  // Format departure time
   const departureDate = new Date(flight.departureTime);
   const formattedTime = departureDate.toLocaleTimeString("en-IN", {
     hour: "2-digit",
@@ -37,7 +39,6 @@ const FlightCard = ({ flight }) => {
   });
   const formattedDate = departureDate.toLocaleDateString("en-GB");
 
-  // Server badge color
   const getServerColor = (server) => {
     switch (server) {
       case "Expert":
@@ -51,7 +52,6 @@ const FlightCard = ({ flight }) => {
     }
   };
 
-  // ✅ Handle Join / Leave
   const handleToggleJoin = async () => {
     if (!isLoggedIn) {
       navigate("/authentication");
@@ -61,10 +61,26 @@ const FlightCard = ({ flight }) => {
     try {
       const res = await axiosInstance.put(`/flights/${flight._id}/join`);
       const updatedParticipants = res.data.flight.participants;
-      setJoined(updatedParticipants.includes(user._id));
+      setJoined(updatedParticipants.some((p) => p._id === user._id));
       setParticipantCount(updatedParticipants.length + 1);
     } catch (error) {
       console.error("Join/Leave error:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this flight?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await axiosInstance.delete(`/flights/${flight._id}`);
+      toast.success("Flight deleted");
+      if (onDelete) onDelete(flight._id);
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete flight");
     }
   };
 
@@ -133,19 +149,33 @@ const FlightCard = ({ flight }) => {
         </p>
       )}
 
-      {/* Join/Leave button */}
+      {/* Action Button */}
       <div className="flex justify-end mt-5">
-        <button
-          onClick={handleToggleJoin}
-          className={`flex items-center gap-2 px-4 py-2 text-sm rounded-full font-medium transition-all duration-300 shadow-md ${
-            joined
-              ? "bg-red-600 hover:bg-red-700"
-              : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-          }`}
-        >
-          {joined ? <UserRoundMinus size={16} /> : <UserRoundPlus size={16} />}
-          {joined ? "Leave" : "Join"}
-        </button>
+        {isOwner ? (
+          <button
+            onClick={handleDelete}
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-full font-medium bg-red-600 hover:bg-red-700 shadow-md"
+          >
+            <Trash2 size={16} />
+            Delete
+          </button>
+        ) : (
+          <button
+            onClick={handleToggleJoin}
+            className={`flex items-center gap-2 px-4 py-2 text-sm rounded-full font-medium transition-all duration-300 shadow-md ${
+              joined
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            }`}
+          >
+            {joined ? (
+              <UserRoundMinus size={16} />
+            ) : (
+              <UserRoundPlus size={16} />
+            )}
+            {joined ? "Leave" : "Join"}
+          </button>
+        )}
       </div>
     </div>
   );

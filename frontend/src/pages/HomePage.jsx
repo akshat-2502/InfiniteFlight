@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { useSelector } from "react-redux";
 import ProfileDropdown from "../components/ProfileDropdown";
@@ -6,24 +6,24 @@ import FlightsView from "./FlightsView";
 import CreateFlightModal from "../components/CreateFlightModal";
 import CreatePostModal from "../components/CreatePostModal";
 import axiosInstance from "../utils/axiosInstance";
+import { toast } from "react-toastify";
 
-// Sidebar with filters
 const Sidebar = ({ isOpen, filters, setFilters }) => {
   const user = useSelector((state) => state.user.user);
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
     setFilters((prev) => {
-      const updated = { ...prev };
-
-      // Only one server can be selected
-      if (["casual", "training", "expert"].includes(name)) {
-        updated.casual = false;
-        updated.training = false;
-        updated.expert = false;
+      const updated = { ...prev, [name]: checked };
+      if (name === "casual" || name === "training" || name === "expert") {
+        return {
+          ...prev,
+          casual: false,
+          training: false,
+          expert: false,
+          [name]: checked,
+        };
       }
-
-      updated[name] = checked;
       return updated;
     });
   };
@@ -56,32 +56,66 @@ const Sidebar = ({ isOpen, filters, setFilters }) => {
       <div className="mt-8">
         <h3 className="text-sm text-gray-300 mb-2">Filter Flights</h3>
         <div className="space-y-2 text-sm text-gray-300">
-          {["today", "morning", "evening"].map((key) => (
-            <label className="block" key={key}>
-              <input
-                type="checkbox"
-                name={key}
-                checked={filters[key] || false}
-                onChange={handleCheckboxChange}
-                className="mr-2"
-              />
-              {key === "today" && "Today"}
-              {key === "morning" && "12am – 11:59am"}
-              {key === "evening" && "12pm – 11:59pm"}
-            </label>
-          ))}
-          {["casual", "training", "expert"].map((key) => (
-            <label className="block" key={key}>
-              <input
-                type="checkbox"
-                name={key}
-                checked={filters[key] || false}
-                onChange={handleCheckboxChange}
-                className="mr-2"
-              />
-              {key.charAt(0).toUpperCase() + key.slice(1)} Server
-            </label>
-          ))}
+          <label className="block">
+            <input
+              type="checkbox"
+              name="today"
+              checked={filters.today || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            Today
+          </label>
+          <label className="block">
+            <input
+              type="checkbox"
+              name="morning"
+              checked={filters.morning || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            12am – 11:59am
+          </label>
+          <label className="block">
+            <input
+              type="checkbox"
+              name="evening"
+              checked={filters.evening || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            12pm – 11:59pm
+          </label>
+          <label className="block">
+            <input
+              type="checkbox"
+              name="casual"
+              checked={filters.casual || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            Casual Server
+          </label>
+          <label className="block">
+            <input
+              type="checkbox"
+              name="training"
+              checked={filters.training || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            Training Server
+          </label>
+          <label className="block">
+            <input
+              type="checkbox"
+              name="expert"
+              checked={filters.expert || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            Expert Server
+          </label>
         </div>
       </div>
     </div>
@@ -97,16 +131,11 @@ const HomePage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({});
-  const observerRef = useRef();
 
   const user = useSelector((state) => state.user.user);
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
-    params.append("skip", page * 10);
-    params.append("limit", 10);
-
-    const now = new Date();
 
     if (filters.today) {
       const start = new Date();
@@ -131,62 +160,67 @@ const HomePage = () => {
       params.append("departureBefore", end.toISOString());
     }
 
-    if (filters.casual) params.append("server", "Casual");
-    if (filters.training) params.append("server", "Training");
-    if (filters.expert) params.append("server", "Expert");
-    if (filters.myFlights && user?._id) params.append("createdBy", user._id);
+    if (filters.casual) {
+      params.append("server", "Casual");
+    } else if (filters.training) {
+      params.append("server", "Training");
+    } else if (filters.expert) {
+      params.append("server", "Expert");
+    }
 
     return params.toString();
   };
 
-  const fetchFlights = async () => {
+  const handleDelete = async (flightId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this flight?"
+    );
+    if (!confirmed) return;
+
     try {
-      setLoading(true);
-      const query = buildQueryParams();
-      const endpoint = Object.keys(filters).length
-        ? `/flights/search?${query}`
-        : `/flights?${query}`;
-      const res = await axiosInstance.get(endpoint);
-
-      if (page === 0) {
-        setFlights(res.data);
-      } else {
-        setFlights((prev) => [...prev, ...res.data]);
-      }
-
-      setHasMore(res.data.length === 10);
+      await axiosInstance.delete(`/flights/${flightId}`);
+      setFlights((prev) => prev.filter((f) => f._id !== flightId));
+      toast.success("Flight deleted successfully");
     } catch (err) {
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
+      console.error("Delete error:", err);
+      toast.error("Failed to delete flight");
     }
   };
 
   useEffect(() => {
-    setPage(0);
-  }, [filters]);
+    const fetchFilteredFlights = async () => {
+      try {
+        setLoading(true);
+        let res;
 
-  useEffect(() => {
-    fetchFlights();
-  }, [page, filters]);
-
-  const lastFlightRef = useCallback(
-    (node) => {
-      if (loading) return;
-      if (observerRef.current) observerRef.current.disconnect();
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setPage((prev) => prev + 1);
+        // ✅ Only call my-flights if user is loaded
+        if (filters.myFlights && user?._id) {
+          res = await axiosInstance.get("/flights/my-flights");
+        } else {
+          res = await axiosInstance.get(
+            `/flights/search?${buildQueryParams()}`
+          );
         }
-      });
-      if (node) observerRef.current.observe(node);
-    },
-    [loading, hasMore]
-  );
+
+        setFlights(res.data);
+        setHasMore(res.data.length === 10);
+        setPage(1);
+      } catch (err) {
+        console.error("Filter change fetch error:", err);
+        setFlights([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // ✅ Only run if user is loaded
+    if (activeTab === "flights" && (user || !filters.myFlights)) {
+      fetchFilteredFlights();
+    }
+  }, [filters, activeTab, user]);
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white flex overflow-x-hidden">
-      {/* Mobile Sidebar Toggle */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button onClick={() => setSidebarOpen(!sidebarOpen)}>
           <Menu size={24} />
@@ -202,9 +236,7 @@ const HomePage = () => {
         />
       )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col items-center transition-all duration-300">
-        {/* Navbar */}
         <div className="w-full max-w-5xl flex flex-col md:flex-row md:justify-between md:items-center p-6 border-b border-zinc-800 gap-4">
           <div className="flex gap-6 justify-center md:justify-start text-sm font-semibold">
             <button
@@ -239,25 +271,26 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* View Content */}
         <div className="w-full max-w-5xl">
           {activeTab === "flights" ? (
-            <FlightsView flights={flights} lastFlightRef={lastFlightRef} />
+            <FlightsView flights={flights} onDelete={handleDelete} />
           ) : (
-            <div className="p-6 text-white">Feed coming soon...</div>
+            <div className="flex-1 p-6 text-white">
+              <p>Feed content goes here...</p>
+            </div>
           )}
         </div>
 
-        {/* Modals */}
         {showModal && activeTab === "flights" && (
           <CreateFlightModal
             onClose={() => setShowModal(false)}
             onCreated={() => {
-              setPage(0);
+              setFilters({ ...filters });
               setShowModal(false);
             }}
           />
         )}
+
         {showModal && activeTab === "feed" && (
           <CreatePostModal onClose={() => setShowModal(false)} />
         )}
