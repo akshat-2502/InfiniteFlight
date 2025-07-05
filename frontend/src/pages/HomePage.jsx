@@ -7,6 +7,7 @@ import CreateFlightModal from "../components/CreateFlightModal";
 import CreatePostModal from "../components/CreatePostModal";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
+import FeedView from "./FeedView";
 
 const Sidebar = ({ isOpen, filters, setFilters }) => {
   const user = useSelector((state) => state.user.user);
@@ -34,24 +35,26 @@ const Sidebar = ({ isOpen, filters, setFilters }) => {
         isOpen ? "translate-x-0" : "-translate-x-full"
       } md:translate-x-0`}
     >
-      <div className="flex flex-col items-center gap-2 mt-16 md:mt-0">
-        <img
-          src={user?.profileImage || "https://via.placeholder.com/80"}
-          alt="user"
-          className="w-20 h-20 rounded-full"
-        />
-        <h2 className="text-lg font-semibold">{user?.username || "User"}</h2>
-        <label className="block mt-4 text-sm text-gray-300">
-          <input
-            type="checkbox"
-            name="myFlights"
-            checked={filters.myFlights || false}
-            onChange={handleCheckboxChange}
-            className="mr-2"
+      {user && (
+        <div className="flex flex-col items-center gap-2 mt-16 md:mt-0">
+          <img
+            src={user?.profileImage || "https://via.placeholder.com/80"}
+            alt="user"
+            className="w-20 h-20 rounded-full"
           />
-          My Flights
-        </label>
-      </div>
+          <h2 className="text-lg font-semibold">{user?.username || "User"}</h2>
+          <label className="block mt-4 text-sm text-gray-300">
+            <input
+              type="checkbox"
+              name="myFlights"
+              checked={filters.myFlights || false}
+              onChange={handleCheckboxChange}
+              className="mr-2"
+            />
+            My Flights
+          </label>
+        </div>
+      )}
 
       <div className="mt-8">
         <h3 className="text-sm text-gray-300 mb-2">Filter Flights</h3>
@@ -131,6 +134,7 @@ const HomePage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({});
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const user = useSelector((state) => state.user.user);
 
@@ -181,6 +185,7 @@ const HomePage = () => {
       await axiosInstance.delete(`/flights/${flightId}`);
       setFlights((prev) => prev.filter((f) => f._id !== flightId));
       toast.success("Flight deleted successfully");
+      setRefreshKey((prev) => prev + 1);
     } catch (err) {
       console.error("Delete error:", err);
       toast.error("Failed to delete flight");
@@ -193,7 +198,6 @@ const HomePage = () => {
         setLoading(true);
         let res;
 
-        // ✅ Only call my-flights if user is loaded
         if (filters.myFlights && user?._id) {
           res = await axiosInstance.get("/flights/my-flights");
         } else {
@@ -213,11 +217,10 @@ const HomePage = () => {
       }
     };
 
-    // ✅ Only run if user is loaded
     if (activeTab === "flights" && (user || !filters.myFlights)) {
       fetchFilteredFlights();
     }
-  }, [filters, activeTab, user]);
+  }, [filters, activeTab, user, showModal, refreshKey]);
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white flex overflow-x-hidden">
@@ -276,7 +279,7 @@ const HomePage = () => {
             <FlightsView flights={flights} onDelete={handleDelete} />
           ) : (
             <div className="flex-1 p-6 text-white">
-              <p>Feed content goes here...</p>
+              <FeedView refreshKey={refreshKey} />
             </div>
           )}
         </div>
@@ -285,14 +288,20 @@ const HomePage = () => {
           <CreateFlightModal
             onClose={() => setShowModal(false)}
             onCreated={() => {
-              setFilters({ ...filters });
               setShowModal(false);
+              setRefreshKey((prev) => prev + 1);
             }}
           />
         )}
 
         {showModal && activeTab === "feed" && (
-          <CreatePostModal onClose={() => setShowModal(false)} />
+          <CreatePostModal
+            onClose={() => setShowModal(false)}
+            onCreated={() => {
+              setShowModal(false);
+              setRefreshKey((prev) => prev + 1); // ✅ Refresh feed
+            }}
+          />
         )}
       </div>
     </div>

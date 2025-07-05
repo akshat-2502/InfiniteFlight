@@ -76,7 +76,10 @@ const Register = ({ setLogin }) => {
         <DotLottieReact src={airplaneLoading} loop autoplay />
       ) : (
         <div className="w-[90%] md:w-1/2 flex relative flex-col justify-center p-10">
-          <button className="absolute top-2 left-2 text-white cursor-pointer font-bold w-30 rounded-xl py-2 px-3 bg-blue-600 flex justify-center items-center">
+          <button
+            onClick={() => navigate("/")}
+            className="absolute top-2 left-2 text-white cursor-pointer font-bold w-30 rounded-xl py-2 px-3 bg-blue-600 flex justify-center items-center"
+          >
             <ArrowLeft /> HOME
           </button>
           <h2 className="text-3xl font-extrabold mb-2 mt-6 font-sans flex justify-center text-zinc-700">
