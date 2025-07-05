@@ -9,7 +9,6 @@ import { FaUserFriends } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
-import { toast } from "react-toastify";
 
 const FlightCard = ({ flight }) => {
   const user = useSelector((state) => state.user.user);
@@ -17,7 +16,6 @@ const FlightCard = ({ flight }) => {
   const navigate = useNavigate();
 
   const [joined, setJoined] = useState(false);
-
   const [participantCount, setParticipantCount] = useState(
     flight.participants.length + 1
   );
@@ -62,8 +60,7 @@ const FlightCard = ({ flight }) => {
 
     try {
       const res = await axiosInstance.put(`/flights/${flight._id}/join`);
-
-      const updatedParticipants = res.data.flight.participants; // ✅ Fix here
+      const updatedParticipants = res.data.flight.participants;
       setJoined(updatedParticipants.includes(user._id));
       setParticipantCount(updatedParticipants.length + 1);
     } catch (error) {
@@ -127,6 +124,14 @@ const FlightCard = ({ flight }) => {
           {participantCount} joining
         </span>
       </div>
+
+      {/* Notes */}
+      {flight.notes && (
+        <p className="text-sm text-gray-300 mt-4">
+          <span className="text-purple-400 font-medium">Notes:</span>{" "}
+          {flight.notes}
+        </p>
+      )}
 
       {/* Join/Leave button */}
       <div className="flex justify-end mt-5">

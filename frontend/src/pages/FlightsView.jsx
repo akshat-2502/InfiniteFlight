@@ -1,33 +1,6 @@
-// Inside HomePage.jsx
-import { useEffect, useState } from "react";
-import axiosInstance from "../utils/axiosInstance";
 import FlightCard from "../components/FlightCard";
 
-const FlightsView = () => {
-  const [flights, setFlights] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const getFlights = async () => {
-      try {
-        const { data } = await axiosInstance.get("/flights");
-        setFlights(data);
-      } catch (error) {
-        console.error("Error fetching flights:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getFlights();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="text-center text-gray-400 mt-8">Loading flights...</div>
-    );
-  }
-
+const FlightsView = ({ flights }) => {
   if (flights.length === 0) {
     return (
       <div className="text-center text-gray-400 mt-8">
@@ -44,4 +17,5 @@ const FlightsView = () => {
     </div>
   );
 };
+
 export default FlightsView;

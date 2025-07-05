@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import ProfileDropdown from "../components/ProfileDropdown";
-import FlightsView from "./FlightsView"; // ✅ Import your actual FlightsView
-// If it's in pages, adjust: import FlightsView from "../pages/FlightsView";
+import FlightsView from "./FlightsView";
+import CreateFlightModal from "../components/CreateFlightModal";
+import CreatePostModal from "../components/CreatePostModal"; // if exists
+import axiosInstance from "../utils/axiosInstance";
 
 const Sidebar = ({ isOpen }) => (
   <div
@@ -40,6 +42,32 @@ const FeedView = () => (
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState("flights");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [refreshFlights, setRefreshFlights] = useState(false);
+  const [flights, setFlights] = useState([]);
+
+  const fetchFlights = async () => {
+    try {
+      const { data } = await axiosInstance.get("/flights");
+      setFlights(data);
+    } catch (error) {
+      console.error("Error fetching flights:", error);
+    }
+  };
+
+  const handleCreateClick = () => {
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === "flights") {
+      fetchFlights();
+    }
+  }, [activeTab, refreshFlights]); // ✅ include refreshFlights here!
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white flex overflow-x-hidden">
@@ -87,7 +115,10 @@ const HomePage = () => {
             </button>
           </div>
           <div className="flex justify-center md:justify-end items-center gap-4">
-            <button className="bg-purple-600 px-4 py-2 rounded text-sm hover:bg-purple-700">
+            <button
+              onClick={handleCreateClick}
+              className="bg-purple-600 px-4 py-2 rounded text-sm hover:bg-purple-700"
+            >
               {activeTab === "flights" ? "Create Flight" : "Create Post"}
             </button>
             <ProfileDropdown />
@@ -96,8 +127,27 @@ const HomePage = () => {
 
         {/* View Content */}
         <div className="w-full max-w-5xl">
-          {activeTab === "flights" ? <FlightsView /> : <FeedView />}
+          {activeTab === "flights" ? (
+            <FlightsView flights={flights} />
+          ) : (
+            <FeedView />
+          )}
         </div>
+
+        {/* Modals */}
+        {showModal && activeTab === "flights" && (
+          <CreateFlightModal
+            onClose={() => setShowModal(false)}
+            onCreated={() => {
+              setRefreshFlights((prev) => !prev); // ✅ toggle to trigger refresh
+              setShowModal(false);
+            }}
+          />
+        )}
+
+        {showModal && activeTab === "feed" && (
+          <CreatePostModal onClose={handleModalClose} />
+        )}
       </div>
     </div>
   );
