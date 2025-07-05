@@ -166,3 +166,18 @@ export const deleteFlight = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const getMyFlights = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const flights = await Flight.find({ createdBy: userId })
+      .populate("createdBy", "username profileImage")
+      .populate("participants", "username profileImage");
+
+    res.status(200).json(flights);
+  } catch (err) {
+    console.error("Get My Flights error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

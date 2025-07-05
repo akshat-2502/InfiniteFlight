@@ -3,6 +3,7 @@ import {
   createFlight,
   deleteFlight,
   getAllFlights,
+  getMyFlights,
   getSingleFlight,
   searchFlights,
   toggleJoinFlight,
@@ -14,6 +15,8 @@ router.get("/", getAllFlights);
 router.get("/search", searchFlights);
 router.post("/create", authenticateUser, createFlight);
 router.put("/:id/join", authenticateUser, toggleJoinFlight);
+router.get("/my-flights", authenticateUser, getMyFlights);
 router.get("/:id", getSingleFlight);
 router.delete("/:id", authenticateUser, deleteFlight);
+
 export default router;

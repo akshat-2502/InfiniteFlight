@@ -2,6 +2,12 @@ import cloudinary from "../config/cloudinary.js";
 import Post from "../models/Post.js";
 import { createPostSchema } from "../validations/postValidation.js";
 
+import Joi from "joi";
+
+const commentSchema = Joi.object({
+  text: Joi.string().trim().min(1).required(),
+});
+
 export const createPost = async (req, res) => {
   try {
     const { error } = createPostSchema.validate(req.body);
@@ -111,7 +117,7 @@ export const toggleLikePost = async (req, res) => {
     await post.save();
     res.status(200).json({
       message: alreadyLiked ? "Post unliked" : "Post liked",
-      likesCount: post.likes.length,
+      likes: post.likes,
     });
   } catch (error) {
     console.error("Error toggling like:", error);
