@@ -6,8 +6,7 @@ import { fetchUserFromToken } from "./redux/userSlice"; // ✅ updated import
 import HomePage from "./pages/HomePage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Analytics } from "@vercel/analytics/next";
-
+import { Analytics } from "@vercel/analytics/react";
 const App = () => {
   const dispatch = useDispatch();
 
