@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux";
 
-const SideBar = ({ isOpen, filters, setFilters, activeTab }) => {
+const Sidebar = ({ isOpen, filters, setFilters, activeTab }) => {
   const user = useSelector((state) => state.user.user);
 
   const handleCheckboxChange = (e) => {
@@ -99,4 +99,4 @@ const SideBar = ({ isOpen, filters, setFilters, activeTab }) => {
   );
 };
 
-export default SideBar;
+export default Sidebar;

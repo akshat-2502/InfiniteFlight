@@ -8,7 +8,7 @@ import CreatePostModal from "../components/CreatePostModal";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
 import FeedView from "./FeedView";
-import SideBar from "../components/SideBar.jsx"; // <-- Make sure Sidebar is imported
+import Sidebar from "../components/Sidebar.jsx"; // <-- Make sure Sidebar is imported
 
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState("flights");
@@ -115,7 +115,7 @@ const HomePage = () => {
         </button>
       </div>
 
-      <SideBar
+      <Sidebar
         isOpen={sidebarOpen}
         filters={filters}
         setFilters={setFilters}
