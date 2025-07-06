@@ -1,63 +1,54 @@
 import { useEffect, useState } from "react";
-import PostCard from "../components/PostCard";
 import axiosInstance from "../utils/axiosInstance";
+import PostCard from "../components/PostCard";
 
 const FeedView = () => {
   const [posts, setPosts] = useState([]);
-  const [page, setPage] = useState(0); // each page = 10 posts
+  const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // 👈 New state
+  const limit = 10;
 
   const fetchPosts = async () => {
-    if (loading || !hasMore) return;
-
-    setLoading(true);
+    setLoading(true); // 👈 Start loading
     try {
-      const res = await axiosInstance.get(`/posts?skip=${page * 10}&limit=10`);
-      setPosts((prev) => [...prev, ...res.data.posts]);
+      const res = await axiosInstance.get(`/posts?skip=${skip}&limit=${limit}`);
+      const newPosts = res.data.posts || [];
+
+      setPosts((prev) => [...prev, ...newPosts]);
+      setSkip((prev) => prev + limit);
       setHasMore(res.data.hasMore);
-      setPage((prev) => prev + 1);
     } catch (err) {
       console.error("Failed to fetch posts:", err);
     } finally {
-      setLoading(false);
+      setLoading(false); // 👈 End loading
     }
   };
 
   useEffect(() => {
-    fetchPosts(); // fetch initial
+    fetchPosts();
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const nearBottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
-
-      if (nearBottom && !loading && hasMore) {
-        fetchPosts();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loading, hasMore]);
+  const handleDeletePost = (postId) => {
+    setPosts((prev) =>
+      prev.filter((post) => post._id.toString() !== postId.toString())
+    );
+  };
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full">
+    <div className="flex flex-col gap-6">
       {posts.map((post) => (
-        <PostCard key={post._id} post={post} />
+        <PostCard key={post._id} post={post} onDelete={handleDeletePost} />
       ))}
 
-      {loading && (
-        <p className="text-sm text-gray-400 mt-4">Loading more posts...</p>
-      )}
-
-      {!hasMore && posts.length > 0 && (
-        <p className="text-sm text-gray-500 mt-4">You’ve reached the end.</p>
-      )}
-
-      {!loading && posts.length === 0 && (
-        <p className="text-sm text-gray-400 mt-4">No posts yet.</p>
+      {hasMore && (
+        <button
+          onClick={fetchPosts}
+          disabled={loading}
+          className="text-center text-purple-400 py-4 hover:underline disabled:opacity-50"
+        >
+          {loading ? "Loading..." : "Load More"}
+        </button>
       )}
     </div>
   );

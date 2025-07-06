@@ -5,7 +5,7 @@ import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, onDelete }) => {
   const {
     _id,
     caption,
@@ -26,7 +26,6 @@ const PostCard = ({ post }) => {
   const [comments, setComments] = useState(initialComments || []);
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
-  const [showAllComments, setShowAllComments] = useState(false);
 
   const isLiked =
     user &&
@@ -81,8 +80,8 @@ const PostCard = ({ post }) => {
   };
 
   const handleDeleteComment = async (commentId) => {
-    const confirmed = window.confirm("Delete this comment?");
-    if (!confirmed) return;
+    const confirmDelete = window.confirm("Delete this comment?");
+    if (!confirmDelete) return;
 
     try {
       await axiosInstance.delete(`/posts/${_id}/comment/${commentId}`);
@@ -91,6 +90,22 @@ const PostCard = ({ post }) => {
     } catch (err) {
       console.error("Delete comment error:", err);
       toast.error("Failed to delete comment");
+    }
+  };
+
+  const handleDeletePost = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this post?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axiosInstance.delete(`/posts/${_id}`);
+      toast.success("Post deleted");
+      if (onDelete) onDelete(_id);
+    } catch (err) {
+      console.error("Delete post error:", err);
+      toast.error("Failed to delete post");
     }
   };
 
@@ -107,7 +122,18 @@ const PostCard = ({ post }) => {
             <p className="text-xs text-gray-400">{postedBy?.country}</p>
           </div>
         </div>
-        <p className="text-xs text-gray-400">{moment(createdAt).fromNow()}</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-gray-400">{moment(createdAt).fromNow()}</p>
+          {user && user._id === postedBy._id && (
+            <button
+              onClick={handleDeletePost}
+              className="text-red-500 hover:text-red-400"
+              title="Delete Post"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Caption */}
@@ -155,48 +181,42 @@ const PostCard = ({ post }) => {
       {/* Comments */}
       <div className="px-6 py-3 text-sm space-y-3 border-t border-zinc-700 max-h-60 overflow-y-auto">
         {comments.length > 0 ? (
-          <>
-            {comments.length > 2 && !showAllComments && (
-              <p
-                className="text-purple-400 cursor-pointer text-sm"
-                onClick={() => setShowAllComments(true)}
-              >
-                View all {comments.length} comments
-              </p>
-            )}
+          comments.map((c) => {
+            const commentedById =
+              typeof c.commentedBy === "object"
+                ? c.commentedBy._id
+                : c.commentedBy;
 
-            {(showAllComments ? comments : comments.slice(-2)).map((c) => {
-              const displayName =
-                typeof c.commentedBy === "object"
-                  ? c.commentedBy.username
-                  : user?._id === c.commentedBy
-                  ? user.username
-                  : "User";
+            const displayName =
+              typeof c.commentedBy === "object"
+                ? c.commentedBy.username
+                : user?._id === c.commentedBy
+                ? user.username
+                : "User";
 
-              return (
-                <div key={c._id} className="flex justify-between items-start">
-                  <div>
-                    <p>
-                      <span className="font-semibold">{displayName}:</span>{" "}
-                      {c.text}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {moment(c.createdAt).fromNow()}
-                    </p>
-                  </div>
-                  {user &&
-                    user._id === (c.commentedBy?._id || c.commentedBy) && (
-                      <button
-                        onClick={() => handleDeleteComment(c._id)}
-                        className="text-red-400 hover:text-red-300 ml-2"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+            return (
+              <div key={c._id} className="flex justify-between items-start">
+                <div>
+                  <p>
+                    <span className="font-semibold">{displayName}:</span>{" "}
+                    {c.text}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {moment(c.createdAt).fromNow()}
+                  </p>
                 </div>
-              );
-            })}
-          </>
+                {user && user._id === commentedById && (
+                  <button
+                    onClick={() => handleDeleteComment(c._id)}
+                    className="text-red-500 hover:text-red-400 ml-2"
+                    title="Delete Comment"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            );
+          })
         ) : (
           <p className="text-gray-500">No comments yet.</p>
         )}

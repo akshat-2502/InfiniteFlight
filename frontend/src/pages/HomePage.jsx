@@ -8,122 +8,7 @@ import CreatePostModal from "../components/CreatePostModal";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
 import FeedView from "./FeedView";
-
-const Sidebar = ({ isOpen, filters, setFilters }) => {
-  const user = useSelector((state) => state.user.user);
-
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setFilters((prev) => {
-      const updated = { ...prev, [name]: checked };
-      if (name === "casual" || name === "training" || name === "expert") {
-        return {
-          ...prev,
-          casual: false,
-          training: false,
-          expert: false,
-          [name]: checked,
-        };
-      }
-      return updated;
-    });
-  };
-
-  return (
-    <div
-      className={`bg-zinc-900 border-r border-zinc-800 p-6 w-72 min-h-screen fixed top-0 left-0 z-40 transform transition-transform duration-300 md:relative ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-0`}
-    >
-      {user && (
-        <div className="flex flex-col items-center gap-2 mt-16 md:mt-0">
-          <img
-            src={user?.profileImage || "https://via.placeholder.com/80"}
-            alt="user"
-            className="w-20 h-20 rounded-full"
-          />
-          <h2 className="text-lg font-semibold">{user?.username || "User"}</h2>
-          <label className="block mt-4 text-sm text-gray-300">
-            <input
-              type="checkbox"
-              name="myFlights"
-              checked={filters.myFlights || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            My Flights
-          </label>
-        </div>
-      )}
-
-      <div className="mt-8">
-        <h3 className="text-sm text-gray-300 mb-2">Filter Flights</h3>
-        <div className="space-y-2 text-sm text-gray-300">
-          <label className="block">
-            <input
-              type="checkbox"
-              name="today"
-              checked={filters.today || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Today
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="morning"
-              checked={filters.morning || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            12am – 11:59am
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="evening"
-              checked={filters.evening || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            12pm – 11:59pm
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="casual"
-              checked={filters.casual || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Casual Server
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="training"
-              checked={filters.training || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Training Server
-          </label>
-          <label className="block">
-            <input
-              type="checkbox"
-              name="expert"
-              checked={filters.expert || false}
-              onChange={handleCheckboxChange}
-              className="mr-2"
-            />
-            Expert Server
-          </label>
-        </div>
-      </div>
-    </div>
-  );
-};
+import Sidebar from "../components/Sidebar"; // <-- Make sure Sidebar is imported
 
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState("flights");
@@ -230,7 +115,12 @@ const HomePage = () => {
         </button>
       </div>
 
-      <Sidebar isOpen={sidebarOpen} filters={filters} setFilters={setFilters} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        filters={filters}
+        setFilters={setFilters}
+        activeTab={activeTab}
+      />
 
       {sidebarOpen && (
         <div
@@ -299,7 +189,7 @@ const HomePage = () => {
             onClose={() => setShowModal(false)}
             onCreated={() => {
               setShowModal(false);
-              setRefreshKey((prev) => prev + 1); // ✅ Refresh feed
+              setRefreshKey((prev) => prev + 1);
             }}
           />
         )}

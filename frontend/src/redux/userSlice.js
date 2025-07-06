@@ -43,3 +43,16 @@ export const fetchUserFromToken = () => async (dispatch) => {
     dispatch(logout());
   }
 };
+
+export const updateUser = (updatedData) => async (dispatch) => {
+  try {
+    const res = await axiosInstance.put("/users/update", updatedData);
+    const updatedUser = res.data;
+
+    const token = localStorage.getItem("token"); // Keep existing token
+    dispatch(login({ user: updatedUser, token }));
+  } catch (error) {
+    console.error("Update failed", error);
+    throw error; // Let UI handle error with toast
+  }
+};
