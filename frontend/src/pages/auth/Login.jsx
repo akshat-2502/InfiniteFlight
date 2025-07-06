@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ const Login = ({ setLogin }) => {
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false); // 👁️ visibility toggle
   const [error, setError] = useState("");
   const [pageLoading, setPageLoading] = useState(false);
 
@@ -67,15 +68,25 @@ const Login = ({ setLogin }) => {
               required
               className="w-full p-3 border border-gray-300 rounded"
             />
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-              className="w-full p-3 border border-gray-300 rounded"
-            />
+
+            {/* 👁️ Password with toggle */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+                required
+                className="w-full p-3 border border-gray-300 rounded pr-10"
+              />
+              <div
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-3 cursor-pointer text-gray-500"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </div>
+            </div>
 
             <button
               type="submit"
@@ -83,6 +94,7 @@ const Login = ({ setLogin }) => {
             >
               Login
             </button>
+
             {error && (
               <p className="text-red-500 font-semibold text-sm text-center">
                 {error}

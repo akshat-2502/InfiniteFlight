@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // use plain axios here for multipart
@@ -10,6 +10,7 @@ import airplaneLoading from "../../assets/animationloading.lottie";
 const Register = ({ setLogin }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -109,14 +110,22 @@ const Register = ({ setLogin }) => {
               required
               className="w-full p-3 border border-gray-300 rounded"
             />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              onChange={handleChange}
-              required
-              className="w-full p-3 border border-gray-300 rounded"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded pr-10"
+              />
+              <div
+                className="absolute right-3 top-3 cursor-pointer text-gray-500"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </div>
+            </div>
             <input
               type="text"
               name="country"
