@@ -8,9 +8,9 @@ import CreatePostModal from "../components/CreatePostModal";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
 import FeedView from "./FeedView";
-import Sidebar from "../components/Sidebar"; // <-- Make sure Sidebar is imported
+import Sidebar from "../components/Sidebar";
 
-const HomePage = () => {
+function HomePage() {
   const [activeTab, setActiveTab] = useState("flights");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -196,6 +196,6 @@ const HomePage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default HomePage;
