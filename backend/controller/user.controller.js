@@ -17,11 +17,16 @@ export const getMyProfile = async (req, res) => {
 
 export const updateMyProfile = async (req, res) => {
   try {
-    const { username, country, profileImage } = req.body;
+    const { username, country } = req.body; // Only extract text fields
     const updatedData = {};
+
     if (username) updatedData.username = username;
     if (country) updatedData.country = country;
-    if (profileImage) updatedData.profileImage = profileImage;
+
+    // If image was uploaded via Cloudinary
+    if (req.file && req.file.path) {
+      updatedData.profileImage = req.file.path;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
@@ -38,7 +43,6 @@ export const updateMyProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 //get post by specific user
 export const getPostsByUser = async (req, res) => {
   try {
