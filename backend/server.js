@@ -10,7 +10,12 @@ dotenv.config();
 connectDatabase();
 
 const app = express();
-app.use(cors({ origin: "*" }));
+app.use(
+  cors({
+    origin: "https://infiniteflight.onrender.com", // replace when frontend is deployed
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
