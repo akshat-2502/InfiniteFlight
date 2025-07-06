@@ -14,6 +14,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://infiniteflight.onrender.com",
   "https://infinite-flight-eight.vercel.app",
+  "https://infiniteaviators.vercel.app/",
 ];
 
 app.use(
