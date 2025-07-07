@@ -23,7 +23,8 @@ const FlightCard = ({ flight, onDelete, onUpdate }) => {
     flight.participants.length + 1
   );
 
-  const isOwner = user?._id === flight.createdBy?._id;
+  const isOwner =
+    String(user?._id) === String(flight?.createdBy?._id || flight?.createdBy);
 
   useEffect(() => {
     if (user && flight.participants) {
