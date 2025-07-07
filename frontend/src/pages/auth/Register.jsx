@@ -135,13 +135,16 @@ const Register = ({ setLogin }) => {
               required
               className="w-full p-3 border border-gray-300 rounded"
             />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              required
-              className="w-full p-3 border border-gray-300 rounded"
-            />
+            <label>
+              Choose Your Profile photo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded mb-5"
+              />
+            </label>
             {profileImage && (
               <img
                 src={URL.createObjectURL(profileImage)}
