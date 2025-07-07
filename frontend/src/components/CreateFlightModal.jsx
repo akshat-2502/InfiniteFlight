@@ -44,9 +44,12 @@ const CreateFlightModal = ({ onClose, onCreated }) => {
     }
 
     try {
-      await axiosInstance.post("/flights/create", formData);
+      const utcDepartureTime = new Date(formData.departureTime).toISOString();
+      const finalData = { ...formData, departureTime: utcDepartureTime };
+
+      await axiosInstance.post("/flights/create", finalData);
       toast.success("Flight created successfully!");
-      onCreated(); // ✅ FIXED: triggers refresh + closes modal
+      onCreated();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create flight.");
     }

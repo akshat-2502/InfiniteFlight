@@ -39,7 +39,8 @@ const Register = ({ setLogin }) => {
 
     if (!profileImage) {
       setError("Please upload a profile image.");
-      return;
+      setPageLoading(false); // also stop loader
+      return; // ✅ this must be here
     }
 
     try {

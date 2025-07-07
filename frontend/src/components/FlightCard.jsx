@@ -35,13 +35,23 @@ const FlightCard = ({ flight, onDelete, onUpdate }) => {
     }
   }, [flight.participants, user]);
 
-  const departureDate = new Date(flight.departureTime);
-  const formattedTime = departureDate.toLocaleTimeString("en-IN", {
+  const departureDate = new Date(flight.departureTime); // UTC ISO string
+
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const formattedTime = departureDate.toLocaleTimeString("en-US", {
+    timeZone: userTimeZone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
-  const formattedDate = departureDate.toLocaleDateString("en-GB");
+
+  const formattedDate = departureDate.toLocaleDateString("en-US", {
+    timeZone: userTimeZone,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
   const getServerColor = (server) => {
     switch (server) {
@@ -92,6 +102,10 @@ const FlightCard = ({ flight, onDelete, onUpdate }) => {
       onDelete(flight._id); // Delegate deletion logic to HomePage
     }
   };
+  console.log("Flight time UTC:", flight.departureTime);
+  console.log("Parsed date object:", departureDate.toString());
+  console.log("Detected user timezone:", userTimeZone);
+  console.log("Formatted local time:", formattedTime, formattedDate);
 
   return (
     <div className="bg-zinc-900/70 backdrop-blur-md border border-zinc-700 rounded-2xl p-6 mb-6 shadow-lg hover:shadow-purple-700 transition-all duration-300">
@@ -128,6 +142,7 @@ const FlightCard = ({ flight, onDelete, onUpdate }) => {
         <span className="text-white font-semibold">
           {formattedTime} – {formattedDate}
         </span>
+        <span className="text-xs text-gray-500 ml-2">({userTimeZone})</span>
       </p>
 
       {/* Info row */}
