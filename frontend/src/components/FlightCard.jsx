@@ -12,10 +12,11 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../utils/axiosInstance";
 import { toast } from "react-toastify";
 
-const FlightCard = ({ flight, onDelete }) => {
+const FlightCard = ({ flight, onDelete, onUpdate }) => {
   const user = useSelector((state) => state.user.user);
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
   const navigate = useNavigate();
+  const [togglingJoin, setTogglingJoin] = useState(false);
 
   const [joined, setJoined] = useState(false);
   const [participantCount, setParticipantCount] = useState(
@@ -26,10 +27,13 @@ const FlightCard = ({ flight, onDelete }) => {
 
   useEffect(() => {
     if (user && flight.participants) {
-      const alreadyJoined = flight.participants.some((p) => p._id === user._id);
+      const alreadyJoined = flight.participants.some(
+        (p) => String(p._id || p) === String(user._id)
+      );
       setJoined(alreadyJoined);
+      setParticipantCount(flight.participants.length);
     }
-  }, [user, flight.participants]);
+  }, [flight.participants, user]);
 
   const departureDate = new Date(flight.departureTime);
   const formattedTime = departureDate.toLocaleTimeString("en-IN", {
@@ -53,34 +57,39 @@ const FlightCard = ({ flight, onDelete }) => {
   };
 
   const handleToggleJoin = async () => {
-    if (!isLoggedIn) {
-      navigate("/authentication");
+    if (!user) {
+      toast.info("Please login to join or leave flights.");
       return;
     }
 
+    setTogglingJoin(true);
     try {
       const res = await axiosInstance.put(`/flights/${flight._id}/join`);
-      const updatedParticipants = res.data.flight.participants;
-      setJoined(updatedParticipants.some((p) => p._id === user._id));
-      setParticipantCount(updatedParticipants.length + 1);
+      const updatedFlight = res.data.flight;
+
+      if (onUpdate) onUpdate(updatedFlight);
+
+      const nowJoined = updatedFlight.participants.some(
+        (p) => String(p._id || p) === String(user._id)
+      );
+
+      toast.success(
+        nowJoined ? "You joined the flight!" : "You left the flight!"
+      );
     } catch (error) {
-      console.error("Join/Leave error:", error);
+      console.error("Join/Leave failed", error);
+      toast.error("Could not update participation");
+    } finally {
+      setTogglingJoin(false);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this flight?"
     );
-    if (!confirmed) return;
-
-    try {
-      await axiosInstance.delete(`/flights/${flight._id}`);
-      toast.success("Flight deleted");
-      if (onDelete) onDelete(flight._id);
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("Failed to delete flight");
+    if (confirmed && onDelete) {
+      onDelete(flight._id); // Delegate deletion logic to HomePage
     }
   };
 
@@ -162,18 +171,26 @@ const FlightCard = ({ flight, onDelete }) => {
         ) : (
           <button
             onClick={handleToggleJoin}
+            disabled={togglingJoin}
             className={`flex items-center gap-2 px-4 py-2 text-sm rounded-full font-medium transition-all duration-300 shadow-md ${
               joined
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-            }`}
+            } disabled:opacity-50`}
           >
-            {joined ? (
-              <UserRoundMinus size={16} />
+            {togglingJoin ? (
+              <span className="animate-pulse">Processing...</span>
+            ) : joined ? (
+              <>
+                <UserRoundMinus size={16} />
+                Leave
+              </>
             ) : (
-              <UserRoundPlus size={16} />
+              <>
+                <UserRoundPlus size={16} />
+                Join
+              </>
             )}
-            {joined ? "Leave" : "Join"}
           </button>
         )}
       </div>

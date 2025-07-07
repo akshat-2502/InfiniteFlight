@@ -61,11 +61,6 @@ function HomePage() {
   };
 
   const handleDelete = async (flightId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this flight?"
-    );
-    if (!confirmed) return;
-
     try {
       await axiosInstance.delete(`/flights/${flightId}`);
       setFlights((prev) => prev.filter((f) => f._id !== flightId));
@@ -106,6 +101,14 @@ function HomePage() {
       fetchFilteredFlights();
     }
   }, [filters, activeTab, user, showModal, refreshKey]);
+
+  const handleUpdateFlight = (updatedFlight) => {
+    setFlights((prev) =>
+      prev.map((flight) =>
+        flight._id === updatedFlight._id ? updatedFlight : flight
+      )
+    );
+  };
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white flex overflow-x-hidden">
@@ -166,7 +169,11 @@ function HomePage() {
 
         <div className="w-full max-w-5xl">
           {activeTab === "flights" ? (
-            <FlightsView flights={flights} onDelete={handleDelete} />
+            <FlightsView
+              flights={flights}
+              onDelete={handleDelete}
+              onUpdate={handleUpdateFlight}
+            />
           ) : (
             <div className="flex-1 p-6 text-white">
               <FeedView refreshKey={refreshKey} />

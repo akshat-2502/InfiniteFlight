@@ -1,6 +1,12 @@
 import FlightCard from "../components/FlightCard";
 
-const FlightsView = ({ flights, lastFlightRef, loading }) => {
+const FlightsView = ({
+  flights,
+  lastFlightRef,
+  loading,
+  onDelete,
+  onUpdate,
+}) => {
   if (flights.length === 0 && !loading) {
     return (
       <div className="text-center text-gray-400 mt-8">
@@ -15,7 +21,12 @@ const FlightsView = ({ flights, lastFlightRef, loading }) => {
         const isLast = index === flights.length - 1;
         return (
           <div key={flight._id} ref={isLast ? lastFlightRef : null}>
-            <FlightCard flight={flight} />
+            <FlightCard
+              key={flight._id}
+              flight={flight}
+              onDelete={onDelete}
+              onUpdate={onUpdate} // ✅ Pass it directly
+            />
           </div>
         );
       })}
